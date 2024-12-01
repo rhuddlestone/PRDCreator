@@ -32,8 +32,7 @@
     "svix": "^1.42.0",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.23.8",
-    "zod-prisma-types": "^3.1.8"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.15",
