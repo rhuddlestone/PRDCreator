@@ -750,6 +750,7 @@ export function NewPRDForm({ initialData }: NewPRDFormProps) {
                   return;
                 }
               }}
+              style={{ display: currentStage === 'pages' ? 'none' : 'block' }}
             >
               {isLoading ? (
                 "Saving..."
