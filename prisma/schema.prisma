@@ -3,16 +3,16 @@ generator client {
 }
 
 generator zod {
-  provider                      = "zod-prisma-types"
-  output                        = "./zod"
-  createRelationshipTypes       = "true"
-  writeNullishInsteadOfOptional = "true"
+  provider = "zod-prisma-types"
+  output   = "../types/zod"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("MIGRATION_DATABASE_URL")
 }
+
 
 model User {
   id        String   @id @default(cuid())
