@@ -1,0 +1,52 @@
+You are tasked with writing the introduction and overview section of a Project Requirement Document (PRD) for a new application. This document will be used by developers when planning pages and functions for the app. Follow these instructions carefully to create a comprehensive and well-structured PRD introduction and overview.
+
+First, review the following information about the application:
+
+Application Name:
+<application_name>
+{{APPLICATION_NAME}}
+</application_name>
+
+Application Description:
+<application_description>
+{{APPLICATION_DESCRIPTION}}
+</application_description>
+
+Tech Stack:
+<progLanguage>
+{{Progamming_Language}}
+</progLanguage>
+
+<framework>
+{{framework}}
+</framework>
+
+<styling>
+{{styling}}
+</styling>
+
+<backend>
+{{backend}}
+</backend>
+
+<auth>
+{{auth}}
+</auth>
+
+<otherPackages>
+{{otherPackages}}
+</otherPackages>
+
+Now, write the introduction and overview section of the PRD. Include the following elements:
+
+1. A brief introduction to the project, mentioning the application name and its primary purpose.
+2. An overview of the application's main features and functionalities, based on the provided description.
+3. A high-level description of the target users or audience for the application.
+4. A summary of the key technologies and packages that will be used in development, referencing the provided tech stack.
+5. Any important constraints, assumptions, or dependencies that developers should be aware of.
+
+Your writing should be clear, concise, and professional. Aim for a length of 300-500 words. Use appropriate headings and subheadings to organize the information.
+
+Present your output in markdown format.
+
+Remember, this introduction and overview will set the tone for the entire PRD and provide crucial context for developers. Ensure that it accurately reflects the information provided and sets clear expectations for the project.

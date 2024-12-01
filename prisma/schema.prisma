@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator zod {
+  provider                      = "zod-prisma-types"
+  output                        = "./zod"
+  createRelationshipTypes       = "true"
+  writeNullishInsteadOfOptional = "true"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  prds      PRD[]
+
+  @@index([clerkId])
+}
+
+model PRD {
+  id             String          @id @default(cuid())
+  appName        String
+  appDescription String
+  progLanguage   String
+  framework      String
+  styling        String
+  backend        String
+  auth           String
+  payments       String
+  otherPackages  String
+  llmProcessed   Boolean         @default(false)
+  llmResponse    Json?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  userId         String
+  implementation Implementation?
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pages          Page[]
+
+  @@index([userId])
+}
+
+model Page {
+  id              String    @id @default(cuid())
+  pageName        String
+  pageDescription String
+  orderIndex      Int
+  status          String    @default("DRAFT")
+  llmProcessed    Boolean   @default(false)
+  llmResponse     Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  lastProcessed   DateTime?
+  prdId           String
+  prd             PRD       @relation(fields: [prdId], references: [id], onDelete: Cascade)
+
+  @@unique([prdId, orderIndex])
+  @@index([prdId])
+}
+
+model Implementation {
+  id              String    @id @default(cuid())
+  setupSteps      Json
+  fileStructure   Json
+  dependencies    Json
+  deploymentGuide Json
+  llmProcessed    Boolean   @default(false)
+  llmResponse     Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  lastProcessed   DateTime?
+  prdId           String    @unique
+  prd             PRD       @relation(fields: [prdId], references: [id], onDelete: Cascade)
+
+  @@index([prdId])
+}

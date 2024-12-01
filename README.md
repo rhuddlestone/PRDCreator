@@ -1,24 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PRD Site
+
+A modern web application for generating and managing Product Requirement Documents (PRDs) using AI assistance. Built with Next.js and enhanced with AI capabilities.
+
+## Features
+
+- **AI-Powered PRD Generation**: Create comprehensive PRDs with AI assistance
+- **User Authentication**: Secure user authentication powered by Clerk
+- **Database Storage**: PostgreSQL database with Prisma ORM for reliable data persistence
+- **Modern UI**: Built with React and styled using modern UI components
+- **Real-time Updates**: Instant updates and responsive interface
+- **Markdown Support**: View and edit PRDs in markdown format
+
+## Tech Stack
+
+- **Frontend**: Next.js 14, React 18
+- **Backend**: Next.js API Routes
+- **Database**: PostgreSQL with Prisma ORM
+- **Authentication**: Clerk
+- **AI Integration**: Anthropic AI SDK
+- **UI Components**: Radix UI
+- **Forms**: React Hook Form with Zod validation
+- **Styling**: Tailwind CSS with class-variance-authority
 
 ## Getting Started
 
-First, run the development server:
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+3. Set up environment variables:
+   Create a `.env` file with the following:
+   ```
+   DATABASE_URL="your_postgresql_connection_string"
+   CLERK_SECRET_KEY="your_clerk_secret"
+   CLERK_PUBLISHABLE_KEY="your_clerk_publishable_key"
+   ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Initialize the database:
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+5. Run the development server:
+   ```bash
+   npm run dev
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+6. Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
+
+## Project Structure
+
+- `/app` - Next.js app router pages and API routes
+- `/components` - Reusable React components
+- `/prisma` - Database schema and configurations
+- `/public` - Static assets
+- `/styles` - Global styles and Tailwind configurations
+
+## Contributing
+
+Feel free to submit issues and enhancement requests.
 
 ## Learn More
 
