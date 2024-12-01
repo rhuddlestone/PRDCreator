@@ -721,7 +721,7 @@ export function NewPRDForm({ initialData }: NewPRDFormProps) {
                     });
                   }
 
-                  router.push(`/dashboard/${prdId}`);
+                  router.push(`/dashboard/${prdId}/view`);
                 } catch (err) {
                   console.error("[PAGE_SAVE_ERROR]", err);
                   const error = err as Error;

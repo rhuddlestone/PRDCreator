@@ -14,7 +14,7 @@ export default function Home() {
           </p>
           <div className="flex justify-center gap-4">
             <a
-              href="/get-started"
+              href="/dashboard"
               className="inline-flex items-center px-6 py-3 text-base font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md"
             >
               Get Started Free
@@ -78,7 +78,7 @@ export default function Home() {
             Join thousands of indie hackers and solopreneurs who trust PRD Creator
           </p>
           <a
-            href="/create"
+            href="/dashboard"
             className="inline-flex items-center px-6 py-3 text-base font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md"
           >
             Start Creating PRDs Now
