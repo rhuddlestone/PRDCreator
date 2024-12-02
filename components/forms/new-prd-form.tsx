@@ -76,14 +76,6 @@ export function NewPRDForm({ initialData }: NewPRDFormProps) {
   const [formChanged, setFormChanged] = useState(false);
   const [pagesChanged, setPagesChanged] = useState(false);
 
-  // Helper function to determine if there are any pending changes
-  const hasPendingChanges = () => {
-    if (currentStage === 'details') {
-      return formChanged;
-    }
-    return pagesChanged;
-  };
-
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
