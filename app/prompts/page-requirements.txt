@@ -1,0 +1,36 @@
+You are a skilled software architect and UI/UX designer. Your task is to analyze a web application page and generate detailed requirements for its implementation.
+
+Context about the application:
+{{APP_BACKGROUND}}
+
+Page to analyze:
+Name: {{PAGE_NAME}}
+Description: {{PAGE_DESCRIPTION}}
+
+Please provide a detailed analysis of the requirements for this page. Include:
+
+1. UI Components and Layout
+- List all necessary UI components (buttons, forms, tables, etc.)
+- Describe the layout and organization of these components
+- Specify any responsive design requirements
+
+2. Functionality Requirements
+- Detail all user interactions and their expected outcomes
+- Specify any data processing or transformations needed
+- List any integrations with other parts of the application
+
+3. Data Requirements
+- Describe what data needs to be displayed or collected
+- Specify any data validation rules
+- Note any data storage or retrieval requirements
+
+4. Technical Considerations
+- List any specific technical requirements or constraints
+- Note any performance considerations
+- Specify any security requirements
+
+5. Error Handling
+- Describe how errors should be handled and displayed
+- List potential error scenarios and their handling
+
+Please format your response in clear, concise bullet points under each section. Focus on being specific and actionable while maintaining a user-centric perspective.

@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useAuth } from "@clerk/nextjs";
+import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +35,8 @@ const formSchema = z.object({
     id: z.string().optional(),
     pageName: z.string().min(1, "Page name is required"),
     pageDescription: z.string().min(1, "Page description is required"),
+    llmProcessed: z.boolean().optional(),
+    llmResponse: z.string().optional(),
   })),
 });
 
@@ -47,6 +50,7 @@ interface PageData {
 
 interface SavedPage extends PageData {
   llmProcessed?: boolean;
+  llmResponse?: string;
 }
 
 interface PRDData extends Omit<FormValues, 'pages'> {
@@ -65,9 +69,10 @@ export function NewPRDForm({ initialData }: NewPRDFormProps) {
   const router = useRouter();
   const { userId } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [currentStage, setCurrentStage] = useState<'details' | 'pages'>('details');
   const [prdId, setPrdId] = useState<string | null>(initialData?.id || null);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [formChanged, setFormChanged] = useState(false);
   const [pagesChanged, setPagesChanged] = useState(false);
 
@@ -95,6 +100,8 @@ export function NewPRDForm({ initialData }: NewPRDFormProps) {
         id: page.id,
         pageName: page.pageName,
         pageDescription: page.pageDescription,
+        llmProcessed: page.llmProcessed,
+        llmResponse: page.llmResponse,
       })) || [],
     },
   });
@@ -125,7 +132,9 @@ export function NewPRDForm({ initialData }: NewPRDFormProps) {
             const initialPage = initialPages[index];
             return !initialPage ||
               page.pageName !== initialPage.pageName ||
-              page.pageDescription !== initialPage.pageDescription;
+              page.pageDescription !== initialPage.pageDescription ||
+              page.llmProcessed !== initialPage.llmProcessed ||
+              page.llmResponse !== initialPage.llmResponse;
           });
         
         setPagesChanged(hasPageChanges);
@@ -135,9 +144,17 @@ export function NewPRDForm({ initialData }: NewPRDFormProps) {
     return () => subscription.unsubscribe();
   }, [form, initialData, currentStage]);
 
+  // Reset loading states when stage changes
+  useEffect(() => {
+    setIsLoading(false);
+    setIsGenerating(false);
+    setIsProcessing(false);
+  }, [currentStage]);
+
   async function onSubmit(values: FormValues) {
     try {
       setIsLoading(true);
+      setIsGenerating(false);
 
       const response = await fetch(prdId ? `/api/prds/${prdId}` : "/api/prds", {
         method: prdId ? "PATCH" : "POST",
@@ -155,6 +172,7 @@ export function NewPRDForm({ initialData }: NewPRDFormProps) {
 
       // Generate PRD content using Anthropic
       try {
+        setIsGenerating(true);
         const aiResponse = await fetch("/api/anthropic", {
           method: "POST",
           headers: {
@@ -242,6 +260,7 @@ export function NewPRDForm({ initialData }: NewPRDFormProps) {
 
       // Now generate the PRD content using Anthropic
       try {
+        setIsGenerating(true);
         const aiResponse = await fetch("/api/anthropic", {
           method: "POST",
           headers: {
@@ -648,39 +667,31 @@ export function NewPRDForm({ initialData }: NewPRDFormProps) {
             </div>
 
             <Button 
-              type="button" 
-              className="w-full" 
-              disabled={isGenerating || !pagesChanged}
+              type="button"
+              className="w-full"
+              disabled={isLoading || isGenerating || isProcessing}
               onClick={async () => {
+                if (!pagesChanged) {
+                  toast({
+                    title: "No Changes",
+                    description: "Please make changes to the pages before saving",
+                  });
+                  return;
+                }
+
                 try {
-                  const pages = form.getValues("pages");
-                  if (!pages.length) {
-                    toast({
-                      title: "Error",
-                      description: "Please add at least one page",
-                      variant: "destructive",
-                    });
-                    return;
-                  }
-
-                  if (!prdId) {
-                    toast({
-                      title: "Error",
-                      description: "PRD ID not found",
-                      variant: "destructive",
-                    });
-                    return;
-                  }
-
-                  setIsGenerating(true);
-
-                  // Save pages to database
+                  setIsLoading(true);
+                  const values = form.getValues();
+                  
+                  // Save pages first
                   const response = await fetch(`/api/prds/${prdId}/pages`, {
                     method: "POST",
                     headers: {
                       "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ pages }),
+                    body: JSON.stringify({
+                      pages: values.pages,
+                    }),
                   });
 
                   if (!response.ok) {
@@ -688,60 +699,77 @@ export function NewPRDForm({ initialData }: NewPRDFormProps) {
                   }
 
                   const savedPages = await response.json();
+                  setIsLoading(false);
 
-                  // Only generate requirements for new pages (pages without llmProcessed flag)
-                  const newPages = savedPages.filter((page: SavedPage) => !page.llmProcessed);
-                  
-                  if (newPages.length > 0) {
-                    for (const page of newPages) {
-                      const reqResponse = await fetch("/api/anthropic/page-requirements", {
+                  // Process each page with LLM
+                  setIsProcessing(true);
+                  for (const page of savedPages) {
+                    try {
+                      console.log(`Processing page ${page.id} with LLM...`);
+                      const llmResponse = await fetch("/api/anthropic/page-requirements", {
                         method: "POST",
                         headers: {
                           "Content-Type": "application/json",
                         },
                         body: JSON.stringify({
-                          prdId,
                           pageId: page.id,
+                          prdId: prdId,
                         }),
                       });
 
-                      if (!reqResponse.ok) {
-                        throw new Error(`Failed to generate requirements for page ${page.pageName}`);
+                      if (!llmResponse.ok) {
+                        console.error(`Failed to process page ${page.pageName}:`, await llmResponse.text());
+                        throw new Error(`Failed to process page ${page.pageName}`);
                       }
-                    }
 
-                    toast({
-                      title: "Success",
-                      description: `Requirements generated for ${newPages.length} new page(s)`,
-                    });
-                  } else {
-                    toast({
-                      title: "Success",
-                      description: "Pages saved successfully",
-                    });
+                      const result = await llmResponse.json();
+                      console.log(`LLM processing completed for page ${page.id}:`, result);
+                      
+                      // Find the index of the page in the form data
+                      const pageIndex = values.pages.findIndex(p => p.pageName === page.pageName);
+                      if (pageIndex !== -1) {
+                        // Update the form data with the new LLM response
+                        form.setValue(`pages.${pageIndex}.llmResponse`, result.requirements.text);
+                        form.setValue(`pages.${pageIndex}.llmProcessed`, true);
+                      }
+                    } catch (error) {
+                      console.error(`[PAGE_PROCESS_ERROR] Failed to process page ${page.pageName}:`, error);
+                      toast({
+                        title: "Warning",
+                        description: `Failed to generate requirements for page "${page.pageName}"`,
+                        variant: "destructive",
+                      });
+                    }
                   }
 
+                  toast({
+                    title: "Success",
+                    description: "Pages saved and descriptions generated",
+                  });
+
+                  // Navigate to the PRD view page after successful processing
                   router.push(`/dashboard/${prdId}/view`);
                 } catch (err) {
                   console.error("[PAGE_SAVE_ERROR]", err);
-                  const error = err as Error;
                   toast({
                     title: "Error",
-                    description: error.message || "Something went wrong",
+                    description: "Failed to save or process pages",
                     variant: "destructive",
                   });
                 } finally {
-                  setIsGenerating(false);
+                  setIsLoading(false);
+                  setIsProcessing(false);
                 }
               }}
             >
-              {isGenerating ? "Generating Requirements..." : "Save Pages and Generate Requirements"}
+              {(isLoading || isGenerating || isProcessing) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isLoading ? "Saving Pages..." : isProcessing ? "Generating Page Descriptions..." : "Save Pages and Generate Page Descriptions"}
             </Button>
 
             <Button 
               type="submit"
               className="w-full mt-4"
-              disabled={isLoading}
+              disabled={isLoading || isGenerating || isProcessing}
               onClick={async (e) => {
                 // If no pending changes and we have a prdId, navigate to PRD view
                 if (!hasPendingChanges() && prdId) {
@@ -750,15 +778,11 @@ export function NewPRDForm({ initialData }: NewPRDFormProps) {
                   return;
                 }
               }}
-              style={{ display: currentStage === 'pages' ? 'none' : 'block' }}
             >
-              {isLoading ? (
-                "Saving..."
-              ) : !hasPendingChanges() && prdId ? (
-                "Open PRD"
-              ) : (
-                "Create PRD"
-              )}
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isGenerating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isLoading ? "Saving..." : isGenerating ? "Generating PRD..." : isProcessing ? "Processing..." : !hasPendingChanges() && prdId ? "Open PRD" : "Create PRD"}
             </Button>
           </>
         )}

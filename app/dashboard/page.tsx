@@ -1,36 +1,26 @@
-import { auth } from "@clerk/nextjs/server";
+'use client';
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
-import { db } from "@/lib/db";
 import { Greeting } from "@/components/ui/greeting";
+import { getPRDs } from "./actions";
 
-export default async function DashboardPage() {
-  const { userId: clerkUserId } = await auth();
+export default function DashboardPage() {
+  const [data, setData] = useState<{ prds: any[]; user: any } | null>(null);
 
-  if (!clerkUserId) {
-    return null;
-  }
+  useEffect(() => {
+    const loadData = async () => {
+      const result = await getPRDs();
+      setData(result);
+    };
+    loadData();
+  }, []);
 
-  // Get the database user first
-  const user = await db.user.findUnique({
-    where: {
-      clerkId: clerkUserId
-    }
-  });
+  if (!data) return null;
 
-  if (!user) {
-    return null;
-  }
-
-  const prds = await db.pRD.findMany({
-    where: {
-      userId: user.id,
-    },
-    orderBy: {
-      updatedAt: 'desc'
-    }
-  });
+  const { prds, user } = data;
 
   return (
     <div className="container mx-auto py-10">
@@ -85,11 +75,36 @@ export default async function DashboardPage() {
                       Open
                     </Button>
                   </Link>
-                  <form action={`/api/prds/${prd.id}`} method="DELETE">
-                    <Button variant="ghost" size="sm" className="text-red-600">
-                      Delete
-                    </Button>
-                  </form>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-red-600"
+                    onClick={async () => {
+                      const confirmed = window.confirm('Are you sure you want to delete this PRD?');
+                      if (confirmed) {
+                        try {
+                          const response = await fetch(`/api/prds/${prd.id}`, {
+                            method: 'DELETE',
+                          });
+                          
+                          if (response.ok) {
+                            // Instead of reloading, update the state
+                            const result = await getPRDs();
+                            setData(result);
+                          } else {
+                            const error = await response.text();
+                            console.error('Failed to delete PRD:', error);
+                            alert('Failed to delete PRD. Please try again.');
+                          }
+                        } catch (error) {
+                          console.error('Error deleting PRD:', error);
+                          alert('An error occurred while deleting the PRD. Please try again.');
+                        }
+                      }
+                    }}
+                  >
+                    Delete
+                  </Button>
                 </div>
               </div>
             ))}

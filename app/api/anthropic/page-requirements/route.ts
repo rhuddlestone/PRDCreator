@@ -112,7 +112,7 @@ export async function POST(req: Request) {
     console.log("[ANTHROPIC_DATABASE] Retrieved PRD and Page data:", safeStringify({ prd, page }));
 
     // Load prompt template
-    const promptPath = path.join(process.cwd(), 'prompt2.txt');
+    const promptPath = path.join(process.cwd(), 'app', 'prompts', 'page-requirements.txt');
     const promptTemplate = await fs.readFile(promptPath, 'utf-8');
 
     // Create app background string

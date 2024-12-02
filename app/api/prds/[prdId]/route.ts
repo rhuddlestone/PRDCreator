@@ -107,20 +107,42 @@ export async function DELETE(
   { params }: { params: { prdId: string } }
 ) {
   try {
-    const { userId } = await auth();
+    const { userId: clerkUserId } = await auth();
 
-    if (!userId) {
+    if (!clerkUserId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const prd = await db.pRD.delete({
+    // Get the database user first
+    const user = await db.user.findUnique({
+      where: { clerkId: clerkUserId },
+    });
+
+    if (!user) {
+      return new NextResponse("User not found", { status: 404 });
+    }
+
+    // Verify PRD exists and belongs to user before deleting
+    const prd = await db.pRD.findUnique({
       where: {
         id: params.prdId,
-        userId: userId,
+        userId: user.id,
+      },
+    });
+
+    if (!prd) {
+      return new NextResponse("PRD not found", { status: 404 });
+    }
+
+    // Delete the PRD
+    await db.pRD.delete({
+      where: {
+        id: params.prdId,
+        userId: user.id,
       }
     });
 
-    return NextResponse.json(prd);
+    return new NextResponse(null, { status: 204 });
   } catch (error) {
     console.error("[PRD_DELETE]", error);
     return new NextResponse("Internal Error", { status: 500 });
