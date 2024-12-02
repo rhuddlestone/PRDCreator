@@ -7,13 +7,57 @@ import { formatDate } from "@/lib/utils";
 import { Greeting } from "@/components/ui/greeting";
 import { getPRDs } from "./actions";
 
+interface User {
+  id: string;
+  clerkId: string;
+  email: string;
+  name?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+type LLMResponse = {
+  intro?: string;
+  analysis?: string;
+  [key: string]: unknown;
+} | string | null;
+
+interface PRD {
+  id: string;
+  appName: string;
+  appDescription: string;
+  progLanguage: string;
+  framework: string;
+  styling: string;
+  backend: string;
+  auth: string;
+  payments: string;
+  otherPackages: string;
+  llmProcessed: boolean;
+  llmResponse?: LLMResponse;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
+}
+
 export default function DashboardPage() {
-  const [data, setData] = useState<{ prds: any[]; user: any } | null>(null);
+  const [data, setData] = useState<{ prds: PRD[]; user: User } | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
       const result = await getPRDs();
-      setData(result);
+      if (result) {
+        // Transform the data to match our PRD interface
+        const transformedPRDs = result.prds.map(prd => ({
+          ...prd,
+          llmResponse: prd.llmResponse as LLMResponse,
+          createdAt: new Date(prd.createdAt),
+          updatedAt: new Date(prd.updatedAt)
+        }));
+        setData({ prds: transformedPRDs, user: result.user });
+      } else {
+        setData(null);
+      }
     };
     loadData();
   }, []);
@@ -90,7 +134,17 @@ export default function DashboardPage() {
                           if (response.ok) {
                             // Instead of reloading, update the state
                             const result = await getPRDs();
-                            setData(result);
+                            if (result) {
+                              const transformedPRDs = result.prds.map(prd => ({
+                                ...prd,
+                                llmResponse: prd.llmResponse as LLMResponse,
+                                createdAt: new Date(prd.createdAt),
+                                updatedAt: new Date(prd.updatedAt)
+                              }));
+                              setData({ prds: transformedPRDs, user: result.user });
+                            } else {
+                              setData(null);
+                            }
                           } else {
                             const error = await response.text();
                             console.error('Failed to delete PRD:', error);
