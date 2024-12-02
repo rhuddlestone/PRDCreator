@@ -769,10 +769,10 @@ export function NewPRDForm({ initialData }: NewPRDFormProps) {
             <Button 
               type="submit"
               className="w-full mt-4"
-              disabled={isLoading || isGenerating || isProcessing}
+              disabled={isLoading || isGenerating || isProcessing || !form.getValues("pages").every(page => page.llmProcessed)}
               onClick={async (e) => {
-                // If no pending changes and we have a prdId, navigate to PRD view
-                if (!hasPendingChanges() && prdId) {
+                // If we have a prdId, navigate to PRD view
+                if (prdId) {
                   e.preventDefault();
                   router.push(`/dashboard/${prdId}/view`);
                   return;
@@ -782,7 +782,7 @@ export function NewPRDForm({ initialData }: NewPRDFormProps) {
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isGenerating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isLoading ? "Saving..." : isGenerating ? "Generating PRD..." : isProcessing ? "Processing..." : !hasPendingChanges() && prdId ? "Open PRD" : "Create PRD"}
+              OPEN PRD
             </Button>
           </>
         )}
